@@ -6,14 +6,15 @@ var Twitter = require("twitter");
 var Spotify = require("node-spotify-api");
 var keys = require("./keys.js");
 
-
+//storing keys for spotify and twitter authentication in variables
 var spotty = new Spotify(keys.spotify);
 var client = new Twitter(keys.twitter);
 
+//variables for holding tweet information
 var postDate = "";
 var tweetText = "";
 
-
+//variables for capturing user input and passing information to functions
 var wholeStatement = process.argv;
 var userInput = "";
 var userFunction = process.argv[2];
@@ -58,7 +59,8 @@ function operate(action)
 //this is the function that runs when the user wants to read twitter messages
 function twitterReading()
 {
-    client.get("search/tweets", {q: "CwruJason"}, function(error, tweets, response) {
+    client.get("search/tweets", {q: "CwruJason"}, function(error, tweets, response) 
+    {
         if (error)
         {
             console.log(error);
@@ -81,39 +83,47 @@ function twitterReading()
 //this is the function that runs when the user wants spotify information 
 function spotifyReading(songName)
 {
+    //if the user does not enter a track title, then we will search for The Sign
     if (songName == "")
     {
         songName = "The Sign";
     }
     else
     {}
-        spotty.search({ type: "track", query: songName}, function(err, data) {
-            if (err) 
+
+    //method for searching for a track on Spotify
+    spotty.search({ type: "track", query: songName}, function(err, data) {
+        if (err) 
+        {
+            console.log("Error occurred: " + err);
+            return;
+        }
+        if(!err)
+        {
+            console.log("Your search request for "+songName+" has been passed to Spotify, and here are the results:");
+            for (var s = 0; s < data.tracks.items.length; s++)
             {
-                console.log("Error occurred: " + err);
-                return;
+                console.log("**************************************************")
+                //song name
+                console.log("Here are the results from spotify for the song: " + data.tracks.items[s].name);
+                //artist name
+                console.log("The artists name is: " + data.tracks.items[s].artists[0].name);
+                //album name
+                console.log("The track is on the " + data.tracks.items[s].album.name +" album.");
+                //preview url
+                console.log("You can preview this song at: " + data.tracks.items[s].preview_url)
+                console.log("**************************************************")
+
+            
             }
-            if(!err)
-            {
-                for (var s = 0; s < data.tracks.items.length; s++)
-                {
-                    //song name
-                    console.log("Here are the results from spotify for the song: " + data.tracks.items[s].name);
-                    //artist name
-                    console.log("The artists name is: " + data.tracks.items[s].artists[0].name);
-                    //album name
-                    console.log("The track is on the " + data.tracks.items[s].album.name +" album.");
-                    //preview url
-                    console.log("You can preview this song at: " + data.tracks.items[s].preview_url)
-                
-                }
-            }
+        }
         });
 }
 
 //this is the function that runs when the user requests movie information
 function movieCall(movieName)
 {
+    //if the user does not enter a movie name, then the title is set to Mr Nobody
     if(movieName == "")
     {
         movieName = "Mr+Nobody";
@@ -121,6 +131,7 @@ function movieCall(movieName)
     else
     {}
     
+    //build of the omdbapi query line with a specified movie title that includes the rotten tomatoes information
     var queryURL = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&tomatoes=true&apikey=trilogy";
 
     request (queryURL, function(error, response, body){
@@ -130,6 +141,7 @@ function movieCall(movieName)
             console.log(error);
         }
 
+        //when there is no error and the status code is good...display the required omdb information
         if(!error && response.statusCode === 200)
         {
 
@@ -157,15 +169,18 @@ function fileRead()
 
         //parse the data in the file by comma
         var dataArray = data.split(",");
+        console.log(dataArray);
 
         //there is no need to loop through the array
         //because we know that there are only two elements and what they are they are assigned to the appropriate variables
         userFunction = dataArray[0];
         userSpecification = dataArray[1];
+        console.log(userFunction);
+        console.log(userSpecification);
     });
 
     //after parsing the file data, call the operation function passing the appropriate info based on the file contents
-    operate(userFunction, userSpecification);
+    operate(userFunction);
 }
 
 //this is intentionally placed AFTER all of the functional operations are defined

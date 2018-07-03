@@ -114,8 +114,8 @@ function spotifyReading(songName)
         }
         else
         {
-            console.log("Your search request for "+songName+" has been passed to Spotify, and here are the results:");
-            for (var s = 0; s < data.tracks.items.length; s++)
+            console.log("Your search request for "+songName+" has been passed to Spotify, and here are the first 5 results:");
+            for (var s = 0; s < data.tracks.items.length && s < 5; s++)
             {
                 console.log("**************************************************")
                 //song name

@@ -23,12 +23,10 @@ var userSpecification = "";
 //quick for loop to modify the track name (if one is supplied)
 function fixTrackTitle(trackName)
 {
-    console.log(trackName);
     for (var j = 3; j < trackName.length; j++)
     {
         userInput = userInput +" "+ trackName[j]; 
     }
-    console.log(userInput);
     userInput = userInput.trim();
     spotifyReading(userInput);
 }

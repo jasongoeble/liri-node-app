@@ -28,15 +28,18 @@ function operate(action)
             twitterReading();
             break;
         case "spotify-this-song":
+            //quick for loop to modify the track title (if one is supplied)
             for (var j = 3; j < wholeStatement.length; j++)
             {
-            userInput = userInput +" "+ wholeStatement[j]; 
+                userInput = userInput +" "+ wholeStatement[j]; 
             }
             spotifyReading(userInput);
             break;
         case "movie-this":
+            //quick for loop to modify the movie title (if one is supplied)
             for (var i = 3; i < wholeStatement.length; i++)
             {
+                //combines components of the title with plus signs, required by omdb
                 if (i>3 && i<wholeStatement.length)
                 {
                     userInput = userInput +"+"+ wholeStatement[i]; 

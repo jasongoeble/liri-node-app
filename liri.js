@@ -1,29 +1,51 @@
 //required node configurations and keys for api functionality
 require("dotenv").config();
-var fs = rquire("fs");
+var fs = require("fs");
 var request = require("request");
-var twitter = require("twitter");
-var spotty = require("node-spotify-api");
+var Twitter = require("twitter");
+var Spotify = require("node-spotify-api");
 var keys = require("./keys.js");
 
 
-var spotify = new spotify(keys.spotify);
+var spotty = new Spotify(keys.spotify);
 var client = new Twitter(keys.twitter);
 
-var userFunction = process.argv[2];
-var userSpecification = process.argv[3]
+var postDate = "";
+var tweetText = "";
 
-function operate(action, details)
+
+var wholeStatement = process.argv;
+var userInput = "";
+var userFunction = process.argv[2];
+//var userSpecification = process.argv[3];
+
+
+function operate(action)
 {
     switch (action){
         case "my-tweets":
             twitterReading();
             break;
         case "spotify-this-song":
-            spotifyReading(details);
+            for (var j = 3; j < wholeStatement.length; j++)
+            {
+            userInput = userInput +" "+ wholeStatement[j]; 
+            }
+            spotifyReading(userInput);
             break;
         case "movie-this":
-            movieCall(details);
+            for (var i = 3; i < wholeStatement.length; i++)
+            {
+                if (i>3 && i<wholeStatement.length)
+                {
+                    userInput = userInput +"+"+ wholeStatement[i]; 
+                }
+                else
+                {
+                    userInput += wholeStatement[i];
+                }
+            }
+            movieCall(userInput);
             break;
         case "do-what-it-says":
             fileRead();
@@ -36,19 +58,72 @@ function operate(action, details)
 //this is the function that runs when the user wants to read twitter messages
 function twitterReading()
 {
+    client.get("search/tweets", {q: "CwruJason"}, function(error, tweets, response) {
+        if (error)
+        {
+            console.log(error);
+        }
+        if(!error && response.statusCode === 200)
+        {
+            for (var t = 0; t < tweets.statuses.length; t++)
+            {
+                postDate = tweets.statuses[t].created_at;
+                postDate = postDate.substr(0,19);
+                tweetText = tweets.statuses[t].text;
+                console.log("Tweet posted on: " + postDate);
+                console.log("Tweet text: " + tweetText);
+            }
+        }
+    });
 
 }
 
 //this is the function that runs when the user wants spotify information 
-function spotifyReading()
+function spotifyReading(songName)
 {
-
+    if (songName == "")
+    {
+        songName = "The Sign";
+    }
+    else
+    {}
+        spotty.search({ type: "track", query: songName}, function(err, data) {
+            if (err) 
+            {
+                console.log("Error occurred: " + err);
+                return;
+            }
+            if(!err)
+            {
+                for (var s = 0; s < data.tracks.items.length; s++)
+                {
+                    //song name
+                    console.log("Here are the results from spotify for the song: " + data.tracks.items[s].name);
+                    //artist name
+                    console.log("The artists name is: " + data.tracks.items[s].artists[0].name);
+                    //album name
+                    console.log("The track is on the " + data.tracks.items[s].album.name +" album.");
+                    //preview url
+                    console.log("You can preview this song at: " + data.tracks.items[s].preview_url)
+                
+                }
+            }
+        });
 }
 
 //this is the function that runs when the user requests movie information
 function movieCall(movieName)
 {
-    request ("http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=40e9cece", function(error, response, body){
+    if(movieName == "")
+    {
+        movieName = "Mr+Nobody";
+    }
+    else
+    {}
+    
+    var queryURL = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&tomatoes=true&apikey=trilogy";
+
+    request (queryURL, function(error, response, body){
 
         if (error)
         {
@@ -57,15 +132,15 @@ function movieCall(movieName)
 
         if(!error && response.statusCode === 200)
         {
-            console.log("The movie title you've inquired about is: " + movieName + ".");
-            console.log(movieName + "was released in " + JSON.parse(body).Year) + ".";
-            console.log(movieName + "was rated " +  JSON.parse(body).imdb_rating + " by IMDB.");
-            console.log(movieName + "was rated " + JSON.parse(body).tomato_rating + " by Rotten Tomatoes.");
-            console.log(movieName + "was created in " + JSON.parse(body).Country + ".");
-            console.log(movieName + "was produced in " + JSON.parse(body).Language + ".");
-            console.log("The plot of " + movieName + " is: " + JSON.parse(body).Plot + ".");
-            console.log(JSON.parse(body).Actors + " all starred in " + movieName + ".");
 
+            console.log("The movie title you've inquired about is: " + JSON.parse(body).Title + ".");
+            console.log(JSON.parse(body).Title + " was released in " + JSON.parse(body).Year + ".");
+            console.log(JSON.parse(body).Title + " was rated " +  JSON.parse(body).imdbRating + " by IMDB.");
+            console.log(JSON.parse(body).Title + " was rated " + JSON.parse(body).tomatoRating + " by Rotten Tomatoes.");
+            console.log(JSON.parse(body).Title + " was created in " + JSON.parse(body).Country + ".");
+            console.log(JSON.parse(body).Title + " was produced in " + JSON.parse(body).Language + ".");
+            console.log("The plot of " + JSON.parse(body).Title + " is: " + JSON.parse(body).Plot + ".");
+            console.log(JSON.parse(body).Actors + " all starred in " + JSON.parse(body).Title + ".");
         }
     });
 }
@@ -94,4 +169,4 @@ function fileRead()
 }
 
 //this is intentionally placed AFTER all of the functional operations are defined
-operate(userFunction, userSpecification);
+operate(userFunction);

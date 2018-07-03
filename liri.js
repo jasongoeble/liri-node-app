@@ -18,9 +18,39 @@ var tweetText = "";
 var wholeStatement = process.argv;
 var userInput = "";
 var userFunction = process.argv[2];
-//var userSpecification = process.argv[3];
+var userSpecification = "";
 
+//quick for loop to modify the track name (if one is supplied)
+function fixTrackTitle(trackName)
+{
+    console.log(trackName);
+    for (var j = 3; j < trackName.length; j++)
+    {
+        userInput = userInput +" "+ trackName[j]; 
+    }
+    console.log(userInput);
+    userInput = userInput.trim();
+    spotifyReading(userInput);
+}
 
+//quick for loop to modify the movie title (if one is supplied)
+function fixMovieTitle(movieTitle)
+{
+    for (var i = 3; i < movieTitle.length; i++)
+    {
+        //combines components of the title with plus signs, required by omdb
+        if (i>3 && i<movieTitle.length)
+        {
+            userInput = userInput +"+"+ movieTitle[i]; 
+        }
+        else
+        {
+            userInput += movieTitle[i];
+        }
+    }
+    userInput = userInput.trim();
+    movieCall(userInput);
+}
 function operate(action)
 {
     switch (action){
@@ -28,28 +58,10 @@ function operate(action)
             twitterReading();
             break;
         case "spotify-this-song":
-            //quick for loop to modify the track title (if one is supplied)
-            for (var j = 3; j < wholeStatement.length; j++)
-            {
-                userInput = userInput +" "+ wholeStatement[j]; 
-            }
-            spotifyReading(userInput);
+            fixTrackTitle(wholeStatement);
             break;
         case "movie-this":
-            //quick for loop to modify the movie title (if one is supplied)
-            for (var i = 3; i < wholeStatement.length; i++)
-            {
-                //combines components of the title with plus signs, required by omdb
-                if (i>3 && i<wholeStatement.length)
-                {
-                    userInput = userInput +"+"+ wholeStatement[i]; 
-                }
-                else
-                {
-                    userInput += wholeStatement[i];
-                }
-            }
-            movieCall(userInput);
+            fixMovieTitle(wholeStatement);
             break;
         case "do-what-it-says":
             fileRead();
@@ -95,32 +107,30 @@ function spotifyReading(songName)
     {}
 
     //method for searching for a track on Spotify
-    spotty.search({ type: "track", query: songName}, function(err, data) {
+    spotty.search({ type: "track", query: songName}, function(err, data) 
+    {
         if (err) 
         {
             console.log("Error occurred: " + err);
             return;
         }
-        if(!err)
+        else
         {
             console.log("Your search request for "+songName+" has been passed to Spotify, and here are the results:");
             for (var s = 0; s < data.tracks.items.length; s++)
             {
                 console.log("**************************************************")
                 //song name
-                console.log("Here are the results from spotify for the song: " + data.tracks.items[s].name);
+                console.log("Song title: " + data.tracks.items[s].name);
                 //artist name
-                console.log("The artists name is: " + data.tracks.items[s].artists[0].name);
+                console.log("Artists name: " + data.tracks.items[s].artists[0].name);
                 //album name
                 console.log("The track is on the " + data.tracks.items[s].album.name +" album.");
                 //preview url
                 console.log("You can preview this song at: " + data.tracks.items[s].preview_url)
-                console.log("**************************************************")
-
-            
             }
         }
-        });
+    });
 }
 
 //this is the function that runs when the user requests movie information
@@ -137,8 +147,8 @@ function movieCall(movieName)
     //build of the omdbapi query line with a specified movie title that includes the rotten tomatoes information
     var queryURL = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&tomatoes=true&apikey=trilogy";
 
-    request (queryURL, function(error, response, body){
-
+    request (queryURL, function(error, response, body)
+    {
         if (error)
         {
             console.log(error);
@@ -164,26 +174,30 @@ function movieCall(movieName)
 function fileRead()
 {
     //this reads the text from a specified file
-    fs.readFile("random.txt", "utf8", function(err, data){
+    fs.readFile("random.txt", "utf8", function(err, data)
+    {
         //if there is an error it will display to the terminal
         if (err){
             console.log(err);
         }
+        else
+        {
+            //parse the data in the file by comma
+            var dataArray = data.split(",");
 
-        //parse the data in the file by comma
-        var dataArray = data.split(",");
-        console.log(dataArray);
+            //there is no need to loop through the array
+            //because we know that there are only two elements and what they are they are assigned to the appropriate variables
+            userFunction = dataArray[0];
+            userSpecification = dataArray[1];
 
-        //there is no need to loop through the array
-        //because we know that there are only two elements and what they are they are assigned to the appropriate variables
-        userFunction = dataArray[0];
-        userSpecification = dataArray[1];
-        console.log(userFunction);
-        console.log(userSpecification);
-    });
+            //remove the quotes from the value
+            userSpecification = userSpecification.substr(1,(userSpecification.length-2));
 
-    //after parsing the file data, call the operation function passing the appropriate info based on the file contents
-    operate(userFunction);
+            //because the track title is structure correctly, the value can just be passed directly to the spotify function
+            spotifyReading(userSpecification);
+        }
+    });    
+    
 }
 
 //this is intentionally placed AFTER all of the functional operations are defined
